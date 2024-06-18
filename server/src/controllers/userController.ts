@@ -79,3 +79,53 @@ export const signup = async (req: Request, res: Response) => {
       balance: acc.balance,
     });
 };
+
+//signin
+export const signin = async (req: Request, res: Response) => {
+  const { success } = signinBody.safeParse(req.body);
+  try {
+    if (!success) {
+      return res.status(ResponseStatus.InputError).json({
+        message: "Incorrect Inputs",
+      });
+    }
+
+    const user = await User.findOne({
+      username: req.body.username,
+    }).select("-password");
+    if (!user) {
+      return res.status(ResponseStatus.Error).json({
+        message: "User not found",
+      });
+    }
+
+    const isMatch = await bcrypt.compare(req.body.password, user.password);
+
+    if (isMatch) {
+      const token = jwt.sign(
+        {
+          userId: user._id,
+        },
+        env.JWT_SECRET
+      );
+      console.log(token);
+      res.cookie("token", token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "none",
+      });
+      return res.status(ResponseStatus.Success).json({
+        token: token,
+        message: "Login successful",
+      });
+    }
+
+    return res.status(ResponseStatus.Error).json({
+      message: "Incorrect Password",
+    });
+  } catch (error) {
+    res.status(ResponseStatus.Error).json({
+      message: "Error while logging in!",
+    });
+  }
+};
