@@ -5,6 +5,7 @@ const cookieParser = require("cookie-parser");
 import dotenv from "dotenv";
 import connectDB from "../src/db/connectDB";
 import env from "../src/utils/validateEnv";
+import userRoutes from "../src/routes/userRoutes";
 
 const app = express();
 app.use(cookieParser());
@@ -17,6 +18,8 @@ app.use(
     credentials: true, // Allow sending cookies from the frontend
   })
 );
+
+app.use("/api/user", userRoutes);
 
 // Handling GET / Request
 app.get("/", (req: Request, res: Response) => {
