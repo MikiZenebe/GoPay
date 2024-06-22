@@ -92,7 +92,8 @@ export const signin = async (req: Request, res: Response) => {
 
     const user = await User.findOne({
       username: req.body.username,
-    }).select("-password");
+    }).select("+password");
+
     if (!user) {
       return res.status(ResponseStatus.Error).json({
         message: "User not found",
@@ -126,6 +127,104 @@ export const signin = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(ResponseStatus.Error).json({
       message: "Error while logging in!",
+    });
+  }
+};
+
+//update
+export const update = async (req: Request, res: Response) => {
+  // const {firstName,lastName,password} = req.body;
+  console.log(req.user._id);
+  try {
+    const { success } = updateBody.safeParse(req.body);
+    if (!success) {
+      res.status(ResponseStatus.Error).json({
+        message: "Invalid Inputs",
+      });
+    }
+    const hashedPassword = await bcrypt.hash(req.body.password, 10);
+    const updatedUser = await User.findOneAndUpdate(
+      {
+        _id: req.user._id,
+      },
+      {
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
+        password: hashedPassword,
+      },
+      {
+        new: true,
+      }
+    );
+
+    if (!updatedUser) {
+      return res.status(ResponseStatus.NotFound).json({
+        message: "User Not Found",
+      });
+    }
+    res.json({
+      message: "Updated successfully",
+    });
+  } catch (error) {
+    console.error("Error updating the");
+    res.status(ResponseStatus.Error).json({
+      message: "Error",
+    });
+  }
+};
+
+export const bulkfilter = async (req: Request, res: Response) => {
+  const filter = req.query.filter || "";
+
+  try {
+    const users = await User.find({
+      $or: [
+        {
+          firstName: {
+            $regex: filter,
+          },
+        },
+        {
+          lastName: {
+            $regex: filter,
+          },
+        },
+        {
+          username: {
+            $regex: filter,
+          },
+        },
+      ],
+    });
+    // console.log(users);
+
+    res.status(ResponseStatus.Success).json({
+      user: users.map((user) => ({
+        username: user.username,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        _id: user._id,
+      })),
+    });
+  } catch (error) {
+    console.error("Error fetching users", error);
+    res.status(ResponseStatus.Error).json({
+      message: "Error",
+    });
+  }
+};
+
+export const logout = async (req: Request, res: Response) => {
+  try {
+    res
+      .clearCookie("token", { sameSite: "none", secure: true })
+      .status(ResponseStatus.Success)
+      .json({
+        message: "Logout successful",
+      });
+  } catch (error) {
+    res.status(ResponseStatus.Error).json({
+      message: "Error Logging out",
     });
   }
 };
