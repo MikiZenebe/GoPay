@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 import connectDB from "../src/db/connectDB";
 import env from "../src/utils/validateEnv";
 import userRoutes from "../src/routes/userRoutes";
+import accountRoutes from "../src/routes/accountRoutes";
 
 const app = express();
 app.use(cookieParser());
@@ -20,6 +21,7 @@ app.use(
 );
 
 app.use("/api/user", userRoutes);
+app.use("/api/account", accountRoutes);
 
 // Handling GET / Request
 app.get("/", (req: Request, res: Response) => {
